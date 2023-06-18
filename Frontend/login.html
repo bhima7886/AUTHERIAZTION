@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Authorization Example</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+</head>
+<body>
+  <h1>Authorization Example</h1>
+  <form id="signup-form">
+    <h2>Signup</h2>
+    <label for="signup-username">Username:</label>
+    <input type="text" id="signup-username" required><br>
+    <label for="signup-password">Password:</label>
+    <input type="password" id="signup-password" required><br>
+    <button type="submit">Signup</button>
+  </form>
+
+  <hr>
+
+  <form id="login-form">
+    <h2>Login</h2>
+    <label for="login-username">Username:</label>
+    <input type="text" id="login-username" required><br>
+    <label for="login-password">Password:</label>
+    <input type="password" id="login-password" required><br>
+    <button type="submit">Login</button>
+  </form>
+
+  <hr>
+
+  <button id="access-data">Access Protected Data</button>
+
+  <script>
+    $(document).ready(function() {
+      // Signup form submission
+      $('#signup-form').submit(function(event) {
+        event.preventDefault();
+
+        const username = $('#signup-username').val();
+        const password = $('#signup-password').val();
+
+        $.ajax({
+          url: 'http://localhost:3000/signup/',
+          method: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({ username, password }),
+          success: function() {
+            alert('Signup successful!');
+          },
+          error: function(jqXHR, textStatus, errorThrown) {
+            alert('Signup failed: ' + jqXHR.responseJSON.error);
+          }
+        });
+      });
+
+      // Login form submission
+      $('#login-form').submit(function(event) {
+        event.preventDefault();
+
+        const username = $('#login-username').val();
+        const password = $('#login-password').val();
+
+        $.ajax({
+          url: 'http://localhost:3000/login',
+          method: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({ username, password }),
+          success: function(response) {
+            const token = response.token;
+            // Store the token in a cookie
+            $.cookie('token', token, { path: '/' });
+            alert('Login successful!');
+          },
+          error: function(jqXHR, textStatus, errorThrown) {
+            alert('Login failed: ' + jqXHR.responseJSON.error);
+          }
+        });
+      });
+
+      // Access protected data button click
+      $('#access-data').click(function() {
+        // Retrieve the token from the cookie
+       // const token = $.cookie('token');
+       
+
+        $.ajax({
+          url: 'http://localhost:3000/student/get-student',
+          method: 'GET',
+        /*  headers: {
+            'Authorization': 'Bearer ' + token
+          },*/
+          beforeSend:function(xhr)
+          {
+            var token=$.cookie("token");
+            xhr.setRequestHeader('Authorization', 'Bearer' + token)
+          },
+          success: function(response) {
+            alert('Protected data: ' + response);
+          },
+          error: function(jqXHR, textStatus, errorThrown) {
+            alert('Access denied: ' + jqXHR.responseJSON.error);
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
